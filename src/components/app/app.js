@@ -22,14 +22,12 @@ export default class App extends React.Component {
 
     this.state = {
       todoData: [
-        this.createTodoItem('Drink Tea'),
-        this.createTodoItem('Tea'),
-        this.createTodoItem('Tea'),
+        this.createTodoItem('Drink Coffee'),
+        this.createTodoItem('Codding'),
+        this.createTodoItem('Go for a walk'),
       ],
       term: '',
-      showDoneItems: true,
-      showActiveItems: true,
-      
+      filter: 'all',      
     };
     
     this.deleteItem = (id) => {
@@ -103,29 +101,35 @@ export default class App extends React.Component {
         return items;
       }
       return items.filter((item) => {
-        return item.label.indexOf(term) > -1;
+        return item.label.toLowerCase().indexOf(term.toLowerCase()) > -1;
       })
     }
-    this.onToggleFilter = (done, active) => {
-      this.setState({showDoneItems: done, showActiveItems: active})
+    this.onFilterChange = (filter) => {
+      this.setState({ filter })
     }
-    this.filterItems = (items, done, active) => {
-      if (done && active) {
-        return items;
+    this.filterItems = (items, filter) => {
+      switch (filter) {
+        case 'all': {
+          return items
+        }
+        case 'active': {
+          return items.filter((item) => !item.done)
+        }
+        case 'done': {
+          return items.filter((item) => item.done)
+        }
+        default: {
+          return items;
+        }        
       }
-      if (active) {
-        return items.filter((item) => item.done === false)
-      } else{
-        return items.filter((item) => item.done === true)
-      }      
-    }
+    }    
   }
   
   render() {
-    const { todoData, term, showDoneItems, showActiveItems } = this.state;
+    const { todoData, term, filter } = this.state;
     
-    let visibleItems = this.search(todoData, term);
-    visibleItems = this.filterItems(todoData, showDoneItems, showActiveItems);
+    let visibleItems = this.filterItems(this.search(todoData, term), filter);
+     
   
     const doneItemsCount = todoData.filter((el) => el.done).length;
     const todoItemsCount = todoData.length - doneItemsCount;
@@ -142,12 +146,14 @@ export default class App extends React.Component {
             onSearchPanelChange={ this.onSearchPanelChange }
           />
           <ItemStatusFilter
-            onToggleFilter={this.onToggleFilter}  
+            filter={filter}
+            onFilterChange={this.onFilterChange}
           />
         </div>
   
         <TodoList
           todos={visibleItems}
+          filter={filter}
           onDeleted={this.deleteItem}
           onToggleImportant={this.onToggleImportant}
           onToggleDone={this.onToggleDone}
